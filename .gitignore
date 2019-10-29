@@ -1,1 +1,6 @@
-node_modules/
+.idea/*
+target/*
+*.iml
+.nrepl-port
+.lein-repl-history
+log/*
