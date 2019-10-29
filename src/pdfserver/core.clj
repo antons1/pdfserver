@@ -2,34 +2,42 @@
   (:require [ring.adapter.jetty :as jetty]
             [compojure.core :refer :all]
             [compojure.route :as route]
-            [clojure.instant :refer [read-instant-date]]
+            [clojure.string :as s]
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.cors :refer [wrap-cors]]
-            [ring.util.response :refer [response content-type]]
-            [clojure.string :as str]
-            [clojure.java.io :as io])
+            [pdfserver.pdfserver :as pdfserver])
   (:gen-class))
 
 (defonce server (atom nil))
 
-(defn file->map
-  [file]
-  {:name (.getName file) :path (.getPath file)})
+(defn is-content-type-set?
+  [response]
+  (or (some? (:content-type response))
+      (some? ((:headers response) "Content-Type"))
+      (some? ((:headers response) "content-type"))))
 
-(defn get-files-in-folder
-  [folder-path]
-  (->> (.listFiles (io/file folder-path))
-       (filter #(not (.isDirectory %)))
-       (map file->map)))
+(defn wrap-default-content-type
+  ([handler]
+   (wrap-default-content-type handler "application/json"))
+  ([handler content-type]
+   (fn [request]
+     (let [response (handler request)]
+       (if (complement (is-content-type-set? response))
+         (assoc-in response [:headers "Content-Type"] content-type)
+         response)))))
+
 
 (defroutes handler
-           (GET "/" [] (get-files-in-folder "."))
+           (GET "/" [] "[\"Hello World\"]")
+           (GET "/all" [] (pdfserver/get-files-in-root))
+           (GET "/directory" {{path :path} :params} (pdfserver/list-folder path))
            (route/not-found "Not found"))
 
 (def app
   (-> #'handler
+      (wrap-default-content-type)
       (wrap-cors :access-control-allow-origin [#"http://localhost"]
                  :access-control-allow-methods [:get :put :post :delete])
       (wrap-json-response)
@@ -40,7 +48,7 @@
 (defn start
   ([] (start {:join? false}))
   ([opts]
-   (reset! server (jetty/run-jetty #'app (merge {:port 3000} opts)))))
+   (reset! server (jetty/run-jetty #'app (merge {:port (or (System/getenv "PORT") 3000)} opts)))))
 
 (defn stop []
   (when @server
@@ -50,7 +58,8 @@
 (defn -main []
   (start {:join? true}))
 
-(comment
 
+(comment
+  (is-content-type-set? {:content-type "application/json" :headers {}})
   (start)
   (stop))

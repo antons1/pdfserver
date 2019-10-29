@@ -1,19 +1,13 @@
 # pdfserver
 
-FIXME
+A plex inspired document server/client
 
-## Prerequisites
+## Development
+You need Clojure and Leiningen installed before starting development
 
-You will need [Leiningen][] 2.0.0 or above installed.
+To start the server, run a REPL and run `(start)`
 
-[leiningen]: https://github.com/technomancy/leiningen
+This will start the API on `localhost:3000` or a port you set in env `PORT`
 
-## Running
-
-To start a web server for the application, run:
-
-    lein ring server
-
-## License
-
-Copyright © 2019 FIXME
+Documents are listed from `[ROOT]/documents`, or another folder configured in
+`:root-folder` in `config.edn`
