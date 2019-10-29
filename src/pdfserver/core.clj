@@ -8,13 +8,24 @@
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.util.response :refer [response content-type]]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clojure.java.io :as io])
   (:gen-class))
 
 (defonce server (atom nil))
 
+(defn file->map
+  [file]
+  {:name (.getName file) :path (.getPath file)})
+
+(defn get-files-in-folder
+  [folder-path]
+  (->> (.listFiles (io/file folder-path))
+       (filter #(not (.isDirectory %)))
+       (map file->map)))
+
 (defroutes handler
-           (GET "/" [] (str "Hello World!"))
+           (GET "/" [] (get-files-in-folder "."))
            (route/not-found "Not found"))
 
 (def app
@@ -40,5 +51,6 @@
   (start {:join? true}))
 
 (comment
+
   (start)
   (stop))
