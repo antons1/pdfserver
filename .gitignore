@@ -1,6 +1,8 @@
-.idea/*
-target/*
+.idea
+.vscode
+server/target
 *.iml
-.nrepl-port
-.lein-repl-history
-log/*
+server/.nrepl-port
+server/.lein-repl-history
+server/log
+client/node_modules
